@@ -1469,9 +1469,10 @@ func skipBalancedBrace(text string, j int) int {
 	return len(text) - 1
 }
 
-// skipVerbatimEnv jumps past a body that LaTeX prints rather than executes:
-// verbatim, verbatim*, and lstlisting. Commands inside are example text.
-// Brace depth does not hide them, because they sit at depth zero.
+// skipVerbatimEnv jumps past a body that LaTeX prints or discards rather
+// than executes: verbatim, verbatim*, lstlisting, and the comment
+// environment from verbatim.sty. Commands inside are not a load. Brace
+// depth does not hide them, because they sit at depth zero.
 func skipVerbatimEnv(text string, i, wordLen int) (int, bool) {
 	rest := text[i+wordLen:]
 	k := 0
@@ -1486,7 +1487,9 @@ func skipVerbatimEnv(text string, i, wordLen int) (int, bool) {
 		return 0, false
 	}
 	name := rest[k+1 : k+end]
-	if name != "verbatim" && name != "verbatim*" && name != "lstlisting" {
+	switch name {
+	case "verbatim", "verbatim*", "lstlisting", "comment":
+	default:
 		return 0, false
 	}
 	start := i + wordLen + k + end + 1

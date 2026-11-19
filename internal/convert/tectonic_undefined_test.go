@@ -366,6 +366,15 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("a comment environment in an included chapter is not a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{verbatim}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\begin{comment}\n\\usepackage{fontspec}\n\\end{comment}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("fontspec was reported (got %q): verbatim's comment environment discards its body", got)
+		}
+	})
+
 	t.Run("a lstlisting example in an included chapter is not a load", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{listings}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
@@ -555,6 +564,12 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\lstinline|\\input{legacy}|\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "\\lstinline prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include inside a comment environment is not source",
+			src:  "\\begin{comment}\n\\input{legacy}\n\\end{comment}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "verbatim's comment environment discards the example",
 		},
 		{
 			name: "an include shown in lstlisting is not source",

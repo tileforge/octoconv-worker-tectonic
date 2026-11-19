@@ -384,6 +384,11 @@ func TestScanTeXPreambleSkipsVerbatim(t *testing.T) {
 			wantPackages: []string{"amsmath"},
 		},
 		{
+			name:         "comment environment is not a load",
+			src:          "\\begin{comment}\n\\usepackage{fontspec}\n\\end{comment}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
 			name:         "lstlisting example is not a load",
 			src:          "\\begin{lstlisting}\n\\usepackage{fontspec}\n\\end{lstlisting}\n\\usepackage{amsmath}\n",
 			wantPackages: []string{"amsmath"},
