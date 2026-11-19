@@ -243,6 +243,21 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 			ifDepth++
 			i += wordLen - 1
 			continue
+		case word == "begin":
+			// filecontents writes its body to a file. A \RequirePackage in
+			// that body is text, and reporting it refuses a document that
+			// never loads the package. An unclosed environment means the
+			// rest of this prefix was not executed either.
+			next, closed := skipFilecontentsBody(src, i, wordLen)
+			if next < 0 {
+				i += wordLen - 1
+				continue
+			}
+			if !closed {
+				complete = false
+			}
+			i = next
+			continue
 		}
 
 		for _, cmd := range []string{"usepackage", "RequirePackage"} {
@@ -386,6 +401,49 @@ func skipTeXOptionGroup(s string) string {
 		}
 	}
 	return s
+}
+
+// skipFilecontentsBody jumps past a filecontents or filecontents* body.
+//
+// The LaTeX kernel reads that body one line at a time and writes it. The
+// end marker is the exact character sequence \end{filecontents} or
+// \end{filecontents*}, and the remainder of that line is discarded rather
+// than executed. next is -1 when the control word is not one of those
+// environments. closed is false when the marker is absent.
+func skipFilecontentsBody(text string, i, wordLen int) (next int, closed bool) {
+	rest := text[i+wordLen:]
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return -1, false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end <= 1 {
+		return -1, false
+	}
+	name := rest[k+1 : k+end]
+	if name != "filecontents" && name != "filecontents*" {
+		return -1, false
+	}
+	marker := `\end{` + name + `}`
+	start := i + wordLen + k + end + 1
+	rel := strings.Index(text[start:], marker)
+	if rel < 0 {
+		if len(text) == 0 {
+			return 0, false
+		}
+		return len(text) - 1, false
+	}
+	j := start + rel + len(marker)
+	for j < len(text) && text[j] != '\n' {
+		j++
+	}
+	if j >= len(text) {
+		return len(text) - 1, true
+	}
+	return j, true
 }
 
 // takeTeXBraceGroup returns the contents of a leading {...} group.

@@ -74,6 +74,17 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 			ifDepth++
 			i += wordLen - 1
 			continue
+		case word == "begin":
+			next, closed := referenceSkipFilecontentsBody(src, i, wordLen)
+			if next < 0 {
+				i += wordLen - 1
+				continue
+			}
+			if !closed {
+				complete = false
+			}
+			i = next
+			continue
 		}
 
 		for _, cmd := range []string{"usepackage", "RequirePackage"} {
@@ -159,6 +170,42 @@ func referenceSkipTeXOptionGroup(s string) string {
 		}
 	}
 	return s
+}
+
+func referenceSkipFilecontentsBody(text string, i, wordLen int) (next int, closed bool) {
+	rest := text[i+wordLen:]
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return -1, false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end <= 1 {
+		return -1, false
+	}
+	name := rest[k+1 : k+end]
+	if name != "filecontents" && name != "filecontents*" {
+		return -1, false
+	}
+	marker := `\end{` + name + `}`
+	start := i + wordLen + k + end + 1
+	rel := strings.Index(text[start:], marker)
+	if rel < 0 {
+		if len(text) == 0 {
+			return 0, false
+		}
+		return len(text) - 1, false
+	}
+	j := start + rel + len(marker)
+	for j < len(text) && text[j] != '\n' {
+		j++
+	}
+	if j >= len(text) {
+		return len(text) - 1, true
+	}
+	return j, true
 }
 
 func referenceTakeTeXBraceGroup(s string) (string, bool) {
@@ -321,7 +368,7 @@ func TestVisitTeXPreamblePackagesMatchesTheReference(t *testing.T) {
 		}
 		got, gotComplete := ScanTeXPreamble([]byte(src))
 		if !slices.Equal(got, want) || gotComplete != wantComplete {
-			t.Errorf("input %d (%d bytes, %.60q): ScanTeXPreamble = %d names, complete %v; the 805d49da implementation = %d names, complete %v",
+			t.Errorf("input %d (%d bytes, %.60q): ScanTeXPreamble = %d names, complete %v; the reference implementation = %d names, complete %v",
 				i, len(src), src, len(got), gotComplete, len(want), wantComplete)
 		}
 		var visited []string
@@ -330,7 +377,7 @@ func TestVisitTeXPreamblePackagesMatchesTheReference(t *testing.T) {
 			return true
 		})
 		if !slices.Equal(visited, want) || visitedComplete != wantComplete {
-			t.Errorf("input %d (%d bytes, %.60q): VisitTeXPreamblePackages visited %d names, complete %v; the 805d49da implementation = %d names, complete %v",
+			t.Errorf("input %d (%d bytes, %.60q): VisitTeXPreamblePackages visited %d names, complete %v; the reference implementation = %d names, complete %v",
 				i, len(src), src, len(visited), visitedComplete, len(want), wantComplete)
 		}
 		for _, k := range []int{1, (len(want) + 1) / 2} {

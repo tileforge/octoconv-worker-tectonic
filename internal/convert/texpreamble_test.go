@@ -255,6 +255,107 @@ func TestScanTeXPreambleStillSeesRealPackagesAroundConditionals(t *testing.T) {
 	}
 }
 
+// TestScanTeXPreambleSkipsFilecontentsBodies is the filecontents form of the
+// same rule: the kernel writes the body to a file and does not execute it.
+// Reporting a package from that body refuses a document that never loads it.
+func TestScanTeXPreambleSkipsFilecontentsBodies(t *testing.T) {
+	cases := []struct {
+		name         string
+		src          string
+		wantPackages []string
+		wantComplete bool
+		wantDenied   string
+	}{
+		{
+			name: "starred body is not a load",
+			src: "\\documentclass{article}\n" +
+				"\\begin{filecontents*}{sample.sty}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\end{filecontents*}\n" +
+				"\\begin{document}\n",
+			wantComplete: true,
+		},
+		{
+			name: "unstarred body is not a load",
+			src: "\\begin{filecontents}{sample.sty}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\end{filecontents}\n" +
+				"\\begin{document}\n",
+			wantComplete: true,
+		},
+		{
+			name: "options and a package after the environment",
+			src: "\\begin{filecontents*}[overwrite]{sample.sty}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\end{filecontents*}\n" +
+				"\\usepackage{amsmath}\n" +
+				"\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+		{
+			// The kernel ignores the rest of the line that holds the end
+			// marker. A package there is not loaded. The next line is.
+			name: "package on the end line is ignored",
+			src: "\\begin{filecontents*}{sample.sty}\n" +
+				"\\end{filecontents*}\\usepackage{fontspec}\n" +
+				"\\usepackage{booktabs}\n" +
+				"\\begin{document}\n",
+			wantPackages: []string{"booktabs"},
+			wantComplete: true,
+			wantDenied:   "",
+		},
+		{
+			name: "unstarred end does not close the starred environment",
+			src: "\\begin{filecontents*}{sample.sty}\n" +
+				"\\end{filecontents}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\end{filecontents*}\n" +
+				"\\usepackage{amsmath}\n" +
+				"\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+		{
+			name: "unclosed environment abstains",
+			src: "\\begin{filecontents*}{sample.sty}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\usepackage{amsmath}\n" +
+				"\\begin{document}\n",
+			wantComplete: false,
+		},
+		{
+			name: "package before the environment is still a load",
+			src: "\\usepackage{amsmath}\n" +
+				"\\begin{filecontents*}{sample.sty}\n" +
+				"\\RequirePackage{fontspec}\n" +
+				"\\end{filecontents*}\n" +
+				"\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, complete := convert.ScanTeXPreamble([]byte(tc.src))
+			if complete != tc.wantComplete {
+				t.Errorf("complete = %v, want %v", complete, tc.wantComplete)
+			}
+			if strings.Join(got, ",") != strings.Join(tc.wantPackages, ",") {
+				t.Errorf("packages = %v, want %v", got, tc.wantPackages)
+			}
+			for _, pkg := range got {
+				if pkg == "fontspec" {
+					t.Errorf("scanner reported fontspec from a filecontents body")
+				}
+			}
+			if denied := convert.TeXDeniedInSource([]byte(tc.src)); denied != tc.wantDenied {
+				t.Errorf("TeXDeniedInSource = %q, want %q", denied, tc.wantDenied)
+			}
+		})
+	}
+}
+
 // TestTeXUnsupportedPackageErrorRoundTrips holds the sentinel and its name
 // extraction together. Both gates format their client-facing message from
 // TeXUnsupportedPackageName, so a change that broke extraction would produce
