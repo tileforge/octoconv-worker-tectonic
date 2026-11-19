@@ -242,6 +242,29 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("an empty package option still reaches the uploaded style", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage[]{custom}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "custom.sty", "\\RequirePackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("denied package not found (got %q): \\usepackage[]{custom} still loads custom.sty", got)
+		}
+	})
+
+	t.Run("a comma inside an input name is one file", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\input{safe,legacy}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "safe,legacy.tex", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): \\input{safe,legacy} reads one file", got)
+		}
+		write(t, dir, "safe,legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("the comma-named source was not scanned (got %q)", got)
+		}
+	})
+
 	t.Run("an include inside a conditional is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\iffoo\\input{legacy}\\fi\n\\begin{document}x\\end{document}\n")
@@ -313,6 +336,30 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\newif\\ifdraft\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "\\newif\\ifdraft declares a conditional; treating \\ifdraft as an open \\if skipped every later include",
+		},
+		{
+			name: "an empty package option is not the filename",
+			src:  "\\usepackage[]{custom}\n",
+			want: []string{"custom"},
+			why:  "reading [] as the filename left custom.sty out of the closure while TeX still loaded it",
+		},
+		{
+			name: "a class option is not the filename",
+			src:  "\\documentclass[11pt,a4paper]{mine}\n",
+			want: []string{"mine"},
+			why:  "the commas belong to the option list, and the class name is the brace group after it",
+		},
+		{
+			name: "a comma in an input argument is part of one filename",
+			src:  "\\input{safe,legacy}\n",
+			want: []string{"safe,legacy"},
+			why:  "\\input reads one file; splitting on the comma followed legacy.tex, which TeX never opens",
+		},
+		{
+			name: "a package list still names each package after its options",
+			src:  "\\usepackage[draft]{alpha,beta}\n",
+			want: []string{"alpha", "beta"},
+			why:  "\\usepackage{a,b} loads both, and the option group is not one of the names",
 		},
 	}
 

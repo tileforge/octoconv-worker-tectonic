@@ -1184,12 +1184,26 @@ func texIncludedNames(src []byte) []texInclude {
 		for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t') {
 			k++
 		}
+		// \usepackage[draft]{custom} and \documentclass[11pt]{mine}. The
+		// brackets are options. Reading them as the filename left the real
+		// file out of the closure, and Tectonic still loaded it.
+		if word == "usepackage" || word == "RequirePackage" || word == "documentclass" || word == "LoadClass" {
+			after := skipTeXOptionGroup(rest[k:])
+			k += len(rest[k:]) - len(after)
+			for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t') {
+				k++
+			}
+		}
 		if k < len(rest) && rest[k] == '{' {
 			if end := strings.IndexByte(rest[k:], '}'); end > 0 && end <= 256 {
-				// One directive can name several: \usepackage{a,b} loads both,
-				// and a comma-separated list read as a single name would
-				// resolve to nothing and quietly skip them.
-				for _, one := range strings.Split(rest[k+1:k+end], ",") {
+				inner := rest[k+1 : k+end]
+				// \usepackage{a,b} loads two packages. \input{safe,legacy}
+				// reads one file: a comma is a legal character in the name.
+				parts := []string{inner}
+				if word == "usepackage" || word == "RequirePackage" {
+					parts = strings.Split(inner, ",")
+				}
+				for _, one := range parts {
 					if one = strings.TrimSpace(one); one != "" {
 						names = append(names, texInclude{name: one, kind: word})
 					}
