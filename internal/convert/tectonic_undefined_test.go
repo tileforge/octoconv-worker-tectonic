@@ -312,6 +312,25 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("includeonly skips an excluded attachment", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\includeonly{selected}\n\\begin{document}\n\\include{selected}\n\\include{legacy}\n\\end{document}\n")
+		write(t, dir, "selected.tex", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): \\includeonly{selected} skips \\include{legacy}", got)
+		}
+	})
+
+	t.Run("includeonly still follows a selected attachment", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\includeonly{legacy}\n\\begin{document}\n\\include{legacy}\n\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("legacy.tex was not scanned (got %q): it is in the \\includeonly set", got)
+		}
+	})
+
 	t.Run("an include after end document is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\nx\n\\end{document}\n\\input{legacy}\n")
@@ -455,6 +474,30 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "verbatim prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "includeonly drops an excluded include",
+			src:  "\\includeonly{selected}\n\\include{selected}\n\\include{legacy}\n\\input{always}\n",
+			want: []string{"selected", "always"},
+			why:  "\\includeonly skips \\include{legacy} and does not affect \\input",
+		},
+		{
+			name: "an empty includeonly drops every include",
+			src:  "\\includeonly{}\n\\include{legacy}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "\\includeonly{} selects nothing",
+		},
+		{
+			name: "a later includeonly replaces the set",
+			src:  "\\includeonly{a}\n\\include{a}\n\\include{b}\n\\includeonly{b}\n\\include{a}\n\\include{b}\n",
+			want: []string{"a", "b"},
+			why:  "each \\includeonly replaces the set for the \\include commands after it",
+		},
+		{
+			name: "includeonly inside a conditional does not filter",
+			src:  "\\iffalse\\includeonly{selected}\\fi\n\\include{legacy}\n",
+			want: []string{"legacy"},
+			why:  "a conditional \\includeonly may not execute",
 		},
 		{
 			name: "an include after end document is not source",

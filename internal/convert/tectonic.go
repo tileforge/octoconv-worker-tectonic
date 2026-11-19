@@ -1115,6 +1115,9 @@ func texIncludedNames(src []byte) []texInclude {
 	// anyway pulled the target into the denial scan and refused a document
 	// TeX does not read.
 	var braceDepth, ifDepth int
+	// nil means every \include is read. An empty map means \includeonly{}
+	// has excluded all of them. \input is never filtered.
+	var includeOnly map[string]bool
 
 	for i := 0; i < len(text); i++ {
 		switch text[i] {
@@ -1204,6 +1207,18 @@ func texIncludedNames(src []byte) []texInclude {
 			ifDepth++
 			i += wordLen - 1
 			continue
+		case word == "includeonly":
+			// The last top-level \includeonly replaces the set. It applies
+			// only to \include commands after it; \input is unaffected.
+			if braceDepth == 0 && ifDepth == 0 {
+				if list, consumed, ok := parseIncludeOnly(text[i+wordLen:]); ok {
+					includeOnly = list
+					i += wordLen + consumed
+					continue
+				}
+			}
+			i += wordLen - 1
+			continue
 		}
 		switch word {
 		case "input", "include", "InputIfFileExists", "subfile":
@@ -1247,7 +1262,7 @@ func texIncludedNames(src []byte) []texInclude {
 					parts = strings.Split(inner, ",")
 				}
 				for _, one := range parts {
-					if one = strings.TrimSpace(one); one != "" {
+					if one = strings.TrimSpace(one); one != "" && includeKept(word, includeOnly, one) {
 						names = append(names, texInclude{name: one, kind: word})
 					}
 				}
@@ -1263,7 +1278,7 @@ func texIncludedNames(src []byte) []texInclude {
 			rest[end] != '{' && rest[end] != '}' {
 			end++
 		}
-		if end > k {
+		if end > k && includeKept(word, includeOnly, rest[k:end]) {
 			names = append(names, texInclude{name: rest[k:end], kind: word})
 			i += wordLen + end - 1
 			continue
@@ -1271,6 +1286,50 @@ func texIncludedNames(src []byte) []texInclude {
 		i += wordLen - 1
 	}
 	return names
+}
+
+// parseIncludeOnly reads a braced \includeonly argument. The kernel removes
+// spaces and then splits on commas. consumed is the index of the closing
+// brace in rest. An empty group is a real list that selects nothing.
+func parseIncludeOnly(rest string) (map[string]bool, int, bool) {
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return nil, 0, false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end < 1 {
+		return nil, 0, false
+	}
+	list := map[string]bool{}
+	for _, part := range strings.Split(rest[k+1:k+end], ",") {
+		if part = includeOnlyKey(part); part != "" {
+			list[part] = true
+		}
+	}
+	return list, k + end, true
+}
+
+// includeKept reports whether an \include name survives the current
+// \includeonly set. Every other directive is kept.
+func includeKept(word string, list map[string]bool, name string) bool {
+	if word != "include" || list == nil {
+		return true
+	}
+	return list[includeOnlyKey(name)]
+}
+
+func includeOnlyKey(name string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case ' ', '\t', '\n', '\r':
+			return -1
+		default:
+			return r
+		}
+	}, name)
 }
 
 // endedDocument reports whether this \end opens the document environment.
