@@ -294,6 +294,29 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("an include written by filecontents is not source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n"+
+			"\\begin{filecontents*}{example.tex}\n\\input{legacy}\n\\end{filecontents*}\n"+
+			"\\begin{document}x\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): filecontents only writes the example", got)
+		}
+	})
+
+	t.Run("an include after filecontents is still source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n"+
+			"\\begin{filecontents*}[overwrite]{example.tex}\n\\input{legacy}\n\\end{filecontents*}\n"+
+			"\\input{real}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "real.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("real.tex was not scanned (got %q): the include after filecontents does execute", got)
+		}
+	})
+
 	t.Run("an include inside a conditional is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\iffoo\\input{legacy}\\fi\n\\begin{document}x\\end{document}\n")
@@ -395,6 +418,18 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "verbatim prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include written by filecontents is not source",
+			src:  "\\begin{filecontents*}{example.tex}\n\\input{legacy}\n\\end{filecontents*}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "filecontents writes the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include on the filecontents end line is not source",
+			src:  "\\begin{filecontents}{example.tex}\n\\end{filecontents}\\input{legacy}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "the kernel discards the rest of the line that holds the end marker",
 		},
 		{
 			name: "an include inside verb is not source",

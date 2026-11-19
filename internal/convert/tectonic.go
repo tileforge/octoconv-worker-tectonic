@@ -1156,6 +1156,12 @@ func texIncludedNames(src []byte) []texInclude {
 				i = next
 				continue
 			}
+			// filecontents writes the body. An \input inside it names an
+			// example file, which TeX does not read.
+			if next, _ := skipFilecontentsBody(text, i, wordLen); next >= 0 {
+				i = next
+				continue
+			}
 		}
 		switch {
 		case word == "fi":
