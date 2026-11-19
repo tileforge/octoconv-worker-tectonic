@@ -265,6 +265,35 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("the first existing input file is the only one", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\input{chapter.tex}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "chapter.tex.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("chapter.tex.tex was scanned (got %q): \\input{chapter.tex} opens chapter.tex", got)
+		}
+	})
+
+	t.Run("a repeated include does not fall through to another extension", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\input{chapter}\n\\input{chapter}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "chapter.ltx", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("chapter.ltx was scanned (got %q): the second \\input{chapter} already selected chapter.tex", got)
+		}
+	})
+
+	t.Run("verbatim text is not source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): the include is inside verbatim", got)
+		}
+	})
+
 	t.Run("an include inside a conditional is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\iffoo\\input{legacy}\\fi\n\\begin{document}x\\end{document}\n")
@@ -360,6 +389,18 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\usepackage[draft]{alpha,beta}\n",
 			want: []string{"alpha", "beta"},
 			why:  "\\usepackage{a,b} loads both, and the option group is not one of the names",
+		},
+		{
+			name: "an include shown in verbatim is not source",
+			src:  "\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "verbatim prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include inside verb is not source",
+			src:  "\\verb|\\input{legacy}|\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "\\verb prints its body, and the \\input inside it is not executed",
 		},
 	}
 

@@ -1033,14 +1033,20 @@ func texSourceClosure(inPath string) []string {
 			// produced three times, each time while closing a bypass.
 			for _, cand := range inc.candidates() {
 				p := filepath.Join(dir, cand)
+				// TeX opens the first file in this order and stops. A later
+				// candidate that also exists, such as chapter.tex.tex beside
+				// chapter.tex, is not read. An earlier file already in the
+				// closure is that selection too, so the fallback stops there.
 				if seen[p] {
-					continue
+					break
 				}
-				if st, serr := os.Stat(p); serr != nil || st.IsDir() {
+				st, serr := os.Stat(p)
+				if serr != nil || !st.Mode().IsRegular() {
 					continue
 				}
 				seen[p] = true
 				out = append(out, p)
+				break
 			}
 		}
 	}
@@ -1092,8 +1098,11 @@ func (i texInclude) candidates() []string {
 	case "documentclass", "LoadClass":
 		return []string{i.name + ".cls"}
 	default:
-		// \input and friends: the name as written, then with .tex, which is
-		// what the primitive itself does.
+		// A name that already has a dot is opened as written. Appending
+		// another extension made \input{chapter.tex} also open chapter.tex.tex.
+		if strings.Contains(i.name, ".") {
+			return []string{i.name}
+		}
 		return []string{i.name, i.name + ".tex", i.name + ".ltx"}
 	}
 }
@@ -1137,6 +1146,16 @@ func texIncludedNames(src []byte) []texInclude {
 			// what keeps the comment branch above honest.
 			i += wordLen - 1
 			continue
+		}
+		if word == "verb" {
+			i = skipVerbBody(text, i, wordLen)
+			continue
+		}
+		if word == "begin" {
+			if next, ok := skipVerbatimEnv(text, i, wordLen); ok {
+				i = next
+				continue
+			}
 		}
 		switch {
 		case word == "fi":
@@ -1228,6 +1247,69 @@ func texIncludedNames(src []byte) []texInclude {
 		i += wordLen - 1
 	}
 	return names
+}
+
+// skipVerbBody jumps to the closing delimiter of \verb or \verb*. The body is
+// printed, not executed, so an \input inside it is not a source dependency.
+func skipVerbBody(text string, i, wordLen int) int {
+	j := i + wordLen
+	if j < len(text) && text[j] == '*' {
+		j++
+	}
+	if j >= len(text) {
+		return len(text) - 1
+	}
+	delim := text[j]
+	j++
+	for j < len(text) && text[j] != delim && text[j] != '\n' {
+		j++
+	}
+	if j >= len(text) {
+		return len(text) - 1
+	}
+	return j
+}
+
+// skipVerbatimEnv jumps past \begin{verbatim} or \begin{verbatim*}. Commands
+// inside the environment are example text. Brace depth does not hide them,
+// because they sit at depth zero.
+func skipVerbatimEnv(text string, i, wordLen int) (int, bool) {
+	rest := text[i+wordLen:]
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return 0, false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end <= 1 {
+		return 0, false
+	}
+	name := rest[k+1 : k+end]
+	if name != "verbatim" && name != "verbatim*" {
+		return 0, false
+	}
+	start := i + wordLen + k + end + 1
+	group := "{" + name + "}"
+	for from := start; from < len(text); {
+		rel := strings.Index(text[from:], `\end`)
+		if rel < 0 {
+			break
+		}
+		j := from + rel + len(`\end`)
+		for j < len(text) && (text[j] == ' ' || text[j] == '\t' || text[j] == '\n') {
+			j++
+		}
+		if strings.HasPrefix(text[j:], group) {
+			return j + len(group) - 1, true
+		}
+		from = from + rel + 1
+	}
+	if len(text) == 0 {
+		return 0, true
+	}
+	return len(text) - 1, true
 }
 
 // tectonicEnv is the ONLY environment the engine gets, and the reason is a
