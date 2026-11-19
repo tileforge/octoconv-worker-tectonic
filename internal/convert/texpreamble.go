@@ -67,11 +67,6 @@ func TeXUnsupportedPackageName(err error) string {
 	return name
 }
 
-// beginDocument ends the preamble. A \usepackage after it is not a preamble
-// entry (LaTeX will error on it anyway), and treating it as one would let a
-// document past the window extend its own preamble arbitrarily.
-const beginDocument = `\begin{document}`
-
 // ScanTeXPreamble collects the package names a LaTeX preamble loads, from an
 // already-read prefix of the file.
 //
@@ -100,14 +95,6 @@ func ScanTeXPreamble(prefix []byte) (packages []string, complete bool) {
 func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (complete bool) {
 	src := string(prefix)
 
-	// Cut at \begin{document} first, so everything below scans the preamble
-	// only. Done on the raw text rather than after comment-stripping because
-	// the marker itself cannot be inside a comment and still open a document.
-	if i := strings.Index(src, beginDocument); i >= 0 {
-		src = src[:i]
-		complete = true
-	}
-
 	// Walk the preamble once, tracking two things a raw substring search
 	// cannot see: whether we are inside a BRACE GROUP (a macro definition
 	// body) and whether we are inside a CONDITIONAL (\if...\fi). A
@@ -133,6 +120,9 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 	var (
 		braceDepth int
 		ifDepth    int
+		// An unevaluated \usepackage clears authority. Reaching \begin{document}
+		// afterwards must not turn the scan authoritative again.
+		abstained bool
 	)
 	for i := 0; i < len(src); i++ {
 		switch src[i] {
@@ -266,15 +256,20 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 				i = next
 				continue
 			}
-			next, closed := skipFilecontentsBody(src, i, wordLen)
-			if next < 0 {
-				i += wordLen - 1
+			if next, closed := skipFilecontentsBody(src, i, wordLen); next >= 0 {
+				if !closed {
+					complete = false
+					abstained = true
+				}
+				i = next
 				continue
 			}
-			if !closed {
-				complete = false
+			// A commented, macro, or conditional \begin{document} does not
+			// open the document. Only a top-level one ends the preamble.
+			if braceDepth == 0 && ifDepth == 0 && beganDocument(src, i, wordLen) {
+				return !abstained
 			}
-			i = next
+			i += wordLen - 1
 			continue
 		}
 
@@ -288,6 +283,7 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 				// argument is a macro. Not an error and not a guess: skipped,
 				// and the scan is no longer authoritative.
 				complete = false
+				abstained = true
 				i += wordLen - 1
 				break
 			}
@@ -295,6 +291,7 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 				// Inside a macro body or a conditional. It may never execute;
 				// the engine decides.
 				complete = false
+				abstained = true
 				i += wordLen - 1
 				break
 			}
@@ -310,6 +307,7 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 					// a macro body, or an unexpanded control sequence). Never
 					// reported, never guessed at.
 					complete = false
+					abstained = true
 				}
 			}
 			i += wordLen - 1
@@ -317,6 +315,24 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 		}
 	}
 	return complete
+}
+
+// beganDocument reports whether this \begin opens the document environment.
+// Spaces before the group are skipped, because \begin takes an argument.
+func beganDocument(text string, i, wordLen int) bool {
+	rest := text[i+wordLen:]
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end <= 1 {
+		return false
+	}
+	return rest[k+1:k+end] == "document"
 }
 
 // endinputLimit is the end of the line TeX still reads after \endinput.

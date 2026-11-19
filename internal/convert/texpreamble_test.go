@@ -397,6 +397,66 @@ func TestScanTeXPreambleSkipsVerbatim(t *testing.T) {
 	}
 }
 
+// TestScanTeXPreambleDocumentBoundary checks that only an executable
+// \begin{document} ends the preamble. A marker in a comment used to truncate
+// the raw text and hide a later load.
+func TestScanTeXPreambleDocumentBoundary(t *testing.T) {
+	cases := []struct {
+		name         string
+		src          string
+		wantPackages []string
+		wantComplete bool
+		wantDenied   string
+	}{
+		{
+			name:         "a commented marker does not hide the following package",
+			src:          "% \\begin{document}\n\\usepackage{fontspec}\n",
+			wantPackages: []string{"fontspec"},
+			wantDenied:   "fontspec",
+		},
+		{
+			name:         "the real marker still ends the preamble",
+			src:          "% \\begin{document}\n\\usepackage{fontspec}\n\\begin{document}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"fontspec"},
+			wantComplete: true,
+			wantDenied:   "fontspec",
+		},
+		{
+			name:         "a marker inside a macro does not end the preamble",
+			src:          "\\newcommand{\\x}{\\begin{document}}\n\\usepackage{amsmath}\n\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+		{
+			name:         "a marker inside a conditional does not end the preamble",
+			src:          "\\iffalse\\begin{document}\\fi\n\\usepackage{amsmath}\n\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+		{
+			name: "a marker written by filecontents does not end the preamble",
+			src: "\\begin{filecontents*}{sample.tex}\n\\begin{document}\n\\usepackage{fontspec}\n\\end{filecontents*}\n" +
+				"\\usepackage{amsmath}\n\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, complete := convert.ScanTeXPreamble([]byte(tc.src))
+			if complete != tc.wantComplete {
+				t.Errorf("complete = %v, want %v", complete, tc.wantComplete)
+			}
+			if strings.Join(got, ",") != strings.Join(tc.wantPackages, ",") {
+				t.Errorf("packages = %v, want %v", got, tc.wantPackages)
+			}
+			if denied := convert.TeXDeniedInSource([]byte(tc.src)); denied != tc.wantDenied {
+				t.Errorf("TeXDeniedInSource = %q, want %q", denied, tc.wantDenied)
+			}
+		})
+	}
+}
+
 // TestScanTeXPreambleStopsAfterEndinput checks the primitive's own rule: TeX
 // finishes the line that holds a top-level \endinput and does not read the
 // rest of the file.
@@ -422,9 +482,8 @@ func TestScanTeXPreambleStopsAfterEndinput(t *testing.T) {
 			wantPackages: []string{"amsmath"},
 		},
 		{
-			name:         "begin document after endinput does not revive the trailing package",
-			src:          "\\endinput\n\\usepackage{fontspec}\n\\begin{document}\n",
-			wantComplete: true,
+			name: "begin document after endinput does not revive the trailing package",
+			src:  "\\endinput\n\\usepackage{fontspec}\n\\begin{document}\n",
 		},
 		{
 			name:         "endinput inside a conditional does not hide the package after fi",

@@ -14,14 +14,10 @@ import (
 func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) {
 	src := string(prefix)
 
-	if i := strings.Index(src, beginDocument); i >= 0 {
-		src = src[:i]
-		complete = true
-	}
-
 	var (
 		braceDepth int
 		ifDepth    int
+		abstained  bool
 	)
 	for i := 0; i < len(src); i++ {
 		switch src[i] {
@@ -90,15 +86,18 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 				i = next
 				continue
 			}
-			next, closed := referenceSkipFilecontentsBody(src, i, wordLen)
-			if next < 0 {
-				i += wordLen - 1
+			if next, closed := referenceSkipFilecontentsBody(src, i, wordLen); next >= 0 {
+				if !closed {
+					complete = false
+					abstained = true
+				}
+				i = next
 				continue
 			}
-			if !closed {
-				complete = false
+			if braceDepth == 0 && ifDepth == 0 && beganDocument(src, i, wordLen) {
+				return packages, !abstained
 			}
-			i = next
+			i += wordLen - 1
 			continue
 		}
 
@@ -109,11 +108,13 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 			args, ok := referenceTakeTeXBraceGroup(referenceSkipTeXOptionGroup(rest[wordLen:]))
 			if !ok {
 				complete = false
+				abstained = true
 				i += wordLen - 1
 				break
 			}
 			if braceDepth > 0 || ifDepth > 0 {
 				complete = false
+				abstained = true
 				i += wordLen - 1
 				break
 			}
@@ -122,6 +123,7 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 					packages = append(packages, name)
 				} else if name != "" {
 					complete = false
+					abstained = true
 				}
 			}
 			i += wordLen - 1
