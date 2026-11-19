@@ -1097,6 +1097,10 @@ func (i texInclude) candidates() []string {
 		return []string{i.name + ".sty"}
 	case "documentclass", "LoadClass":
 		return []string{i.name + ".cls"}
+	case "include":
+		// LaTeX \include reads #1.tex and nothing else. An extensionless
+		// file of the same name is not a candidate.
+		return []string{i.name + ".tex"}
 	default:
 		// A name that already has a dot is opened as written. Appending
 		// another extension made \input{chapter.tex} also open chapter.tex.tex.

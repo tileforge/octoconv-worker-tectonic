@@ -173,6 +173,22 @@ func TestValidateTectonicBundleRefusesWhatStatAccepts(t *testing.T) {
 // two, and it is the one this project has paid for most.
 //
 // So the walk follows what TeX follows.
+func TestIncludeCandidatesAreTexOnly(t *testing.T) {
+	got := texInclude{name: "chapter", kind: "include"}.candidates()
+	if len(got) != 1 || got[0] != "chapter.tex" {
+		t.Fatalf("include candidates = %v, want [chapter.tex]", got)
+	}
+	got = texInclude{name: "chapter.tex", kind: "include"}.candidates()
+	if len(got) != 1 || got[0] != "chapter.tex.tex" {
+		t.Fatalf("dotted include candidates = %v, want [chapter.tex.tex]", got)
+	}
+	got = texInclude{name: "chapter", kind: "input"}.candidates()
+	want := []string{"chapter", "chapter.tex", "chapter.ltx"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("input candidates = %v, want %v", got, want)
+	}
+}
+
 func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 	write := func(t *testing.T, dir, name, body string) {
 		t.Helper()
@@ -309,6 +325,26 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		write(t, dir, "custom.sty", "\\endinput\\RequirePackage{fontspec}\n")
 		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
 			t.Fatalf("fontspec was not reported (got %q): TeX still reads the rest of the \\endinput line", got)
+		}
+	})
+
+	t.Run("include opens the tex file and not the extensionless one", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\include{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter", "\\usepackage{fontspec}\n")
+		write(t, dir, "chapter.tex", "\\newcommand{\\x}{y}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("the extensionless chapter was scanned (got %q): \\include{chapter} opens chapter.tex", got)
+		}
+	})
+
+	t.Run("include still reads a tex file that loads a denied package", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\include{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter", "\\newcommand{\\x}{y}\n")
+		write(t, dir, "chapter.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("chapter.tex was not scanned (got %q): \\include{chapter} opens chapter.tex", got)
 		}
 	})
 
