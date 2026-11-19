@@ -482,6 +482,54 @@ func TestScanTeXPreambleDocumentBoundary(t *testing.T) {
 	}
 }
 
+// TestScanTeXPreambleStopsAtEndDocument checks an included chapter, which
+// has no \begin{document}. LaTeX still ends the job at \end{document}.
+func TestScanTeXPreambleStopsAtEndDocument(t *testing.T) {
+	cases := []struct {
+		name         string
+		src          string
+		wantPackages []string
+	}{
+		{
+			name: "a package after the terminator is not a load",
+			src:  "chapter text\n\\end{document}\n\\usepackage{fontspec}\n",
+		},
+		{
+			name: "a package on the terminator line is not a load",
+			src:  "\\end{document}\\usepackage{fontspec}\n",
+		},
+		{
+			name:         "a package before the terminator is still a load",
+			src:          "\\usepackage{amsmath}\n\\end{document}\n\\usepackage{fontspec}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "a terminator inside a conditional does not hide a later package",
+			src:          "\\iffalse\\end{document}\\fi\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "a terminator inside a macro does not hide a later package",
+			src:          "\\newcommand{\\x}{\\end{document}}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, complete := convert.ScanTeXPreamble([]byte(tc.src))
+			if complete {
+				t.Errorf("complete = true, want false")
+			}
+			if strings.Join(got, ",") != strings.Join(tc.wantPackages, ",") {
+				t.Errorf("packages = %v, want %v", got, tc.wantPackages)
+			}
+			if denied := convert.TeXDeniedInSource([]byte(tc.src)); denied != "" {
+				t.Errorf("TeXDeniedInSource = %q, want empty", denied)
+			}
+		})
+	}
+}
+
 // TestScanTeXPreambleStopsAfterEndinput checks the primitive's own rule: TeX
 // finishes the line that holds a top-level \endinput and does not read the
 // rest of the file.

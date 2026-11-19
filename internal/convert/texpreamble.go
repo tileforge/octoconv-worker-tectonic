@@ -251,6 +251,17 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 			// or the brace form.
 			i = skipLstinline(src, i, wordLen)
 			continue
+		case word == "end":
+			// LaTeX ends the job at a top-level \end{document}. A package
+			// after it, on this line or a later one, is not a load. An
+			// included chapter has no \begin{document} to stop the scan first.
+			if braceDepth == 0 && ifDepth == 0 {
+				if _, ok := endedDocument(src, i, wordLen); ok {
+					return complete
+				}
+			}
+			i += wordLen - 1
+			continue
 		case word == "begin":
 			// verbatim prints its body. filecontents writes its body to a
 			// file. A \usepackage in either is text, and reporting it refuses

@@ -348,6 +348,15 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("a package after end document in an included chapter is not a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter.tex", "chapter text\n\\end{document}\n\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("fontspec was reported (got %q): LaTeX stops the chapter at \\end{document}", got)
+		}
+	})
+
 	t.Run("an lstinline example in an included chapter is not a load", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{listings}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")

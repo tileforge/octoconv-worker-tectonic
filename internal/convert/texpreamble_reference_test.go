@@ -84,6 +84,14 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 		case word == "lstinline":
 			i = skipLstinline(src, i, wordLen)
 			continue
+		case word == "end":
+			if braceDepth == 0 && ifDepth == 0 {
+				if _, ok := endedDocument(src, i, wordLen); ok {
+					return packages, complete
+				}
+			}
+			i += wordLen - 1
+			continue
 		case word == "begin":
 			if next, ok := skipVerbatimEnv(src, i, wordLen); ok {
 				i = next
