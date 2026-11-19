@@ -1172,6 +1172,16 @@ func texIncludedNames(src []byte) []texInclude {
 			}
 			i += wordLen - 1
 			continue
+		case word == "end":
+			// \end{document} runs the job terminator. Tokens after it, on
+			// this line or a later one, are not read.
+			if braceDepth == 0 && ifDepth == 0 {
+				if _, ok := endedDocument(text, i, wordLen); ok {
+					return names
+				}
+			}
+			i += wordLen - 1
+			continue
 		case word == "fi":
 			if ifDepth > 0 {
 				ifDepth--
@@ -1261,6 +1271,27 @@ func texIncludedNames(src []byte) []texInclude {
 		i += wordLen - 1
 	}
 	return names
+}
+
+// endedDocument reports whether this \end opens the document environment.
+// Spaces before the group are skipped, because \end takes an argument.
+func endedDocument(text string, i, wordLen int) (int, bool) {
+	rest := text[i+wordLen:]
+	k := 0
+	for k < len(rest) && (rest[k] == ' ' || rest[k] == '\t' || rest[k] == '\n') {
+		k++
+	}
+	if k >= len(rest) || rest[k] != '{' {
+		return 0, false
+	}
+	end := strings.IndexByte(rest[k:], '}')
+	if end <= 1 {
+		return 0, false
+	}
+	if rest[k+1:k+end] != "document" {
+		return 0, false
+	}
+	return i + wordLen + k + end, true
 }
 
 // skipVerbBody jumps to the closing delimiter of \verb or \verb*. The body is

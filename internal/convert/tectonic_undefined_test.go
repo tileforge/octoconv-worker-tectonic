@@ -312,6 +312,25 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("an include after end document is not source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\nx\n\\end{document}\n\\input{legacy}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): LaTeX stops at \\end{document}", got)
+		}
+	})
+
+	t.Run("an include in the document body is still source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\input{real}\n\\end{document}\n\\input{legacy}\n")
+		write(t, dir, "real.tex", "\\usepackage{fontspec}\n")
+		write(t, dir, "legacy.tex", "\\newcommand{\\x}{y}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("real.tex was not scanned (got %q): an \\input before \\end{document} does execute", got)
+		}
+	})
+
 	t.Run("an include written by filecontents is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n"+
@@ -436,6 +455,24 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "verbatim prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include after end document is not source",
+			src:  "\\input{chapter}\n\\end{document}\n\\input{legacy}\n",
+			want: []string{"chapter"},
+			why:  "LaTeX stops at \\end{document} and does not read legacy.tex",
+		},
+		{
+			name: "an include on the end document line is not source",
+			src:  "\\end{document}\\input{legacy}\n",
+			want: nil,
+			why:  "the job terminator runs before later tokens on the same line",
+		},
+		{
+			name: "end document inside a conditional does not hide a later include",
+			src:  "\\iffalse\\end{document}\\fi\n\\input{real}\n",
+			want: []string{"real"},
+			why:  "a conditional \\end{document} may not execute",
 		},
 		{
 			name: "an include after endinput is not source",
