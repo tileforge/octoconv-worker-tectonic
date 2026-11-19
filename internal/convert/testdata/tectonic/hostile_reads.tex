@@ -1,0 +1,42 @@
+% hostile_reads.tex -- the document PR #21 exists to defeat.
+%
+% Sibling of hostile_write18.tex, and the same idea from the other side: that
+% one proves --untrusted refuses \write18, this one proves the sandbox refuses
+% \openin. --untrusted does NOT confine reads; measured in PR #19, where
+% \openin on /proc/self/environ returned DATABASE_URL, S3_SECRET_KEY,
+% API_KEY_SALT and WEBHOOK_SIGNING_SECRET into the PDF a client got back.
+%
+% HOW TO READ THE RESULT: the page count IS the verdict. Every successful read
+% fires a \newpage, so
+%
+%     1 page  -> every attempt was refused
+%     n pages -> n-1 reads succeeded, and the PDF names which
+%
+% That is deliberate. Reading the typeset TEXT back means decoding a subsetted
+% font; counting pages does not, so the test cannot be fooled by an encoding
+% nobody checked.
+%
+% The TeX bundle is deliberately NOT probed here. It is granted read-only by
+% design -- the engine cannot typeset without it -- and an earlier version of
+% this file probed it, read binary, and aborted before the later attempts,
+% reporting four refusals as though they were six.
+%
+% Measured 2026-09-06 through the live API: status done, 1 page.
+
+\documentclass{article}
+\newread\f
+\newcommand\probe[1]{%
+  \openin\f=#1
+  \ifeof\f\else\read\f to \line \newpage READ #1\fi
+  \closein\f}
+\begin{document}
+Base page.
+\probe{/etc/hostname}
+\probe{/etc/passwd}
+\probe{/proc/self/environ}
+\probe{/proc/self/cmdline}
+\probe{../../../etc/hostname}
+\probe{/etc/ssl/certs/../hostname}
+\probe{/root/.ssh/id_rsa}
+\probe{/var/run/secrets/kubernetes.io/serviceaccount/token}
+\end{document}

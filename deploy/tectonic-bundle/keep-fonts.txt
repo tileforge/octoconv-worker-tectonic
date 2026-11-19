@@ -1,0 +1,19 @@
+# Font directories the bundle must CONTAIN, derived the same way as
+# keep-packages.txt. Fonts are 93% of an unreduced bundle (2.6 GB of 2.8 GB),
+# so this list is what actually determines the artifact's size.
+#
+# fontmapping is here because a hand-written list omitted it and the bundle
+# failed with "Font mapping tex-text.tec not found" on the first document.
+amsfonts
+ckx.map
+cm
+fontawesome5
+fontmapping
+glyphlist.txt
+latex-fonts
+lm
+pdfglyphlist.txt
+tex-gyre
+texglyphlist.txt
+updmap
+zapfding

@@ -1,0 +1,83 @@
+# The directory closure the bundle must CONTAIN, derived by measurement.
+#
+# internal/convert/texpackages.go is the DECLARED set -- 18 packages a client
+# may name. This file is a different thing: the directories those packages
+# actually resolve to, plus everything the LaTeX format build itself loads.
+# 18 declared packages need 67 directories.
+#
+# Derived, not written: compile a document using the whole declared set
+# against the full bundle, take the file names tectonic resolved, and map
+# each to its directory in the TeXLive tree. A hand-written list produced a
+# 112 MB bundle that could not typeset -- graphics-cfg and graphics-def were
+# missing because 'graphics' was in the list and they are separate
+# directories, which is exactly the guessing this replaces.
+#
+# Regenerate with scripts/tectonic-bundle-closure.sh after changing the
+# declared set.
+amscls
+amsfonts
+amsmath
+antomega
+atbegshi
+atveryend
+auxhook
+babel
+babel-english
+base
+biblatex
+bigintcalc
+bitset
+booktabs
+caption
+colortbl
+config
+enumitem
+environ
+etexcmds
+etoolbox
+fancyhdr
+firstaid
+fontawesome5
+fontspec
+geometry
+gettitlestring
+graphics
+graphics-cfg
+graphics-def
+hycolor
+hyperref
+hyph-utf8
+hyphen
+iftex
+infwarerr
+intcalc
+kvdefinekeys
+kvoptions
+kvsetkeys
+l3backend
+l3kernel
+l3packages
+letltxmacro
+listings
+lm
+logreq
+ltxcmds
+makecmds
+microtype
+pdfescape
+pdftexcmds
+pgf
+polyglossia
+refcount
+rerunfilecheck
+stringenc
+tcolorbox
+tex-ini-files
+titlesec
+tools
+trimspaces
+unicode-data
+uniquecounter
+url
+xcolor
+xkeyval
