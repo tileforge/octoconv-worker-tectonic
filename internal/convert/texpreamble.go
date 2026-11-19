@@ -246,6 +246,11 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 			// \verb prints its body. A package named inside it is an example.
 			i = skipVerbBody(src, i, wordLen)
 			continue
+		case word == "lstinline":
+			// \lstinline prints its argument, in either the delimiter form
+			// or the brace form.
+			i = skipLstinline(src, i, wordLen)
+			continue
 		case word == "begin":
 			// verbatim prints its body. filecontents writes its body to a
 			// file. A \usepackage in either is text, and reporting it refuses

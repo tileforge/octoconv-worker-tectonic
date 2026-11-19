@@ -389,6 +389,21 @@ func TestScanTeXPreambleSkipsVerbatim(t *testing.T) {
 			wantPackages: []string{"amsmath"},
 		},
 		{
+			name:         "lstinline example is not a load",
+			src:          "\\lstinline|\\usepackage{fontspec}|\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "braced lstinline example is not a load",
+			src:          "\\lstinline{\\usepackage{fontspec}}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "lstinline options do not hide a later package",
+			src:          "\\lstinline[morekeywords={end}]|\\usepackage{fontspec}|\n\\usepackage{booktabs}\n",
+			wantPackages: []string{"booktabs"},
+		},
+		{
 			name:         "lstlisting options do not hide a later package",
 			src:          "\\begin{lstlisting}[language=TeX]\n\\usepackage{fontspec}\n\\end{lstlisting}\n\\usepackage{booktabs}\n",
 			wantPackages: []string{"booktabs"},

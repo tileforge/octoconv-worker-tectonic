@@ -1158,6 +1158,10 @@ func texIncludedNames(src []byte) []texInclude {
 			i = skipVerbBody(text, i, wordLen)
 			continue
 		}
+		if word == "lstinline" {
+			i = skipLstinline(text, i, wordLen)
+			continue
+		}
 		if word == "begin" {
 			if next, ok := skipVerbatimEnv(text, i, wordLen); ok {
 				i = next
@@ -1376,6 +1380,93 @@ func skipVerbBody(text string, i, wordLen int) int {
 		return len(text) - 1
 	}
 	return j
+}
+
+// skipLstinline jumps past the argument of \lstinline. listings prints it.
+// The optional key list may contain brackets inside braces. The code is
+// either a brace group or a one-character delimiter, as with \verb.
+func skipLstinline(text string, i, wordLen int) int {
+	j := skipScanSpace(text, i+wordLen)
+	if j < len(text) && text[j] == '[' {
+		end, ok := skipLstOptionGroup(text, j)
+		if !ok {
+			return end
+		}
+		j = skipScanSpace(text, end+1)
+	}
+	if j >= len(text) {
+		if len(text) == 0 {
+			return 0
+		}
+		return len(text) - 1
+	}
+	if text[j] == '{' {
+		return skipBalancedBrace(text, j)
+	}
+	delim := text[j]
+	j++
+	for j < len(text) && text[j] != delim && text[j] != '\n' {
+		j++
+	}
+	if j >= len(text) {
+		return len(text) - 1
+	}
+	return j
+}
+
+func skipScanSpace(text string, j int) int {
+	for j < len(text) && (text[j] == ' ' || text[j] == '\t' || text[j] == '\n') {
+		j++
+	}
+	return j
+}
+
+func skipLstOptionGroup(text string, j int) (int, bool) {
+	depth, brace := 0, 0
+	for ; j < len(text); j++ {
+		switch text[j] {
+		case '{':
+			brace++
+		case '}':
+			if brace > 0 {
+				brace--
+			}
+		case '[':
+			if brace == 0 {
+				depth++
+			}
+		case ']':
+			if brace == 0 {
+				depth--
+				if depth == 0 {
+					return j, true
+				}
+			}
+		}
+	}
+	if len(text) == 0 {
+		return 0, false
+	}
+	return len(text) - 1, false
+}
+
+func skipBalancedBrace(text string, j int) int {
+	depth := 0
+	for ; j < len(text); j++ {
+		switch text[j] {
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				return j
+			}
+		}
+	}
+	if len(text) == 0 {
+		return 0
+	}
+	return len(text) - 1
 }
 
 // skipVerbatimEnv jumps past a body that LaTeX prints rather than executes:

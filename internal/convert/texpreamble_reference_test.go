@@ -81,6 +81,9 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 		case word == "verb":
 			i = skipVerbBody(src, i, wordLen)
 			continue
+		case word == "lstinline":
+			i = skipLstinline(src, i, wordLen)
+			continue
 		case word == "begin":
 			if next, ok := skipVerbatimEnv(src, i, wordLen); ok {
 				i = next
