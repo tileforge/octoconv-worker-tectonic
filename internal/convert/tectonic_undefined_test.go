@@ -312,6 +312,24 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("a verbatim example in an included chapter is not a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\begin{verbatim}\n\\usepackage{fontspec}\n\\end{verbatim}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("fontspec was reported (got %q): the example is inside verbatim", got)
+		}
+	})
+
+	t.Run("a package outside verbatim in an included chapter is a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\begin{verbatim}\n\\usepackage{fontspec}\n\\end{verbatim}\n\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("fontspec was not reported (got %q): the load after verbatim does execute", got)
+		}
+	})
+
 	t.Run("includeonly skips an excluded attachment", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\includeonly{selected}\n\\begin{document}\n\\include{selected}\n\\include{legacy}\n\\end{document}\n")

@@ -356,6 +356,47 @@ func TestScanTeXPreambleSkipsFilecontentsBodies(t *testing.T) {
 	}
 }
 
+// TestScanTeXPreambleSkipsVerbatim checks that an example of a package load
+// inside verbatim or \verb is not itself a load. An included chapter has no
+// \begin{document} to cut the scan, so the skip has to happen here.
+func TestScanTeXPreambleSkipsVerbatim(t *testing.T) {
+	cases := []struct {
+		name         string
+		src          string
+		wantPackages []string
+	}{
+		{
+			name: "verbatim example is not a load",
+			src:  "\\begin{verbatim}\n\\usepackage{fontspec}\n\\end{verbatim}\n",
+		},
+		{
+			name: "verbatim star example is not a load",
+			src:  "\\begin{verbatim*}\n\\RequirePackage{fontspec}\n\\end{verbatim*}\n",
+		},
+		{
+			name:         "a package after verbatim is still a load",
+			src:          "\\begin{verbatim}\n\\usepackage{fontspec}\n\\end{verbatim}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "verb example is not a load",
+			src:          "\\verb|\\usepackage{fontspec}|\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := convert.ScanTeXPreamble([]byte(tc.src))
+			if strings.Join(got, ",") != strings.Join(tc.wantPackages, ",") {
+				t.Errorf("packages = %v, want %v", got, tc.wantPackages)
+			}
+			if denied := convert.TeXDeniedInSource([]byte(tc.src)); denied != "" {
+				t.Errorf("TeXDeniedInSource = %q, want empty", denied)
+			}
+		})
+	}
+}
+
 // TestScanTeXPreambleStopsAfterEndinput checks the primitive's own rule: TeX
 // finishes the line that holds a top-level \endinput and does not read the
 // rest of the file.

@@ -252,11 +252,20 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 			}
 			i += wordLen - 1
 			continue
+		case word == "verb":
+			// \verb prints its body. A package named inside it is an example.
+			i = skipVerbBody(src, i, wordLen)
+			continue
 		case word == "begin":
-			// filecontents writes its body to a file. A \RequirePackage in
-			// that body is text, and reporting it refuses a document that
-			// never loads the package. An unclosed environment means the
-			// rest of this prefix was not executed either.
+			// verbatim prints its body. filecontents writes its body to a
+			// file. A \usepackage in either is text, and reporting it refuses
+			// a document that never loads the package. An unclosed
+			// filecontents environment means the rest of this prefix was not
+			// executed either.
+			if next, ok := skipVerbatimEnv(src, i, wordLen); ok {
+				i = next
+				continue
+			}
 			next, closed := skipFilecontentsBody(src, i, wordLen)
 			if next < 0 {
 				i += wordLen - 1
