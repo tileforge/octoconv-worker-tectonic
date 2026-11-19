@@ -1101,6 +1101,11 @@ func (i texInclude) candidates() []string {
 func texIncludedNames(src []byte) []texInclude {
 	text := string(src)
 	var names []texInclude
+	// A directive inside a macro body or a conditional may never execute.
+	// VisitTeXPreamblePackages already abstains there; following the include
+	// anyway pulled the target into the denial scan and refused a document
+	// TeX does not read.
+	var braceDepth, ifDepth int
 
 	for i := 0; i < len(text); i++ {
 		switch text[i] {
@@ -1111,6 +1116,14 @@ func texIncludedNames(src []byte) []texInclude {
 				i += nl
 			} else {
 				i = len(text)
+			}
+			continue
+		case '{':
+			braceDepth++
+			continue
+		case '}':
+			if braceDepth > 0 {
+				braceDepth--
 			}
 			continue
 		case '\\':
@@ -1125,6 +1138,30 @@ func texIncludedNames(src []byte) []texInclude {
 			i += wordLen - 1
 			continue
 		}
+		switch {
+		case word == "fi":
+			if ifDepth > 0 {
+				ifDepth--
+			}
+			i += wordLen - 1
+			continue
+		case word == "newif":
+			i += wordLen - 1
+			for i+1 < len(text) && (text[i+1] == ' ' || text[i+1] == '\t') {
+				i++
+			}
+			if strings.HasPrefix(text[i+1:], `\if`) {
+				i++
+				for i+1 < len(text) && isASCIILetter(text[i+1]) {
+					i++
+				}
+			}
+			continue
+		case strings.HasPrefix(word, "if"):
+			ifDepth++
+			i += wordLen - 1
+			continue
+		}
 		switch word {
 		case "input", "include", "InputIfFileExists", "subfile":
 			// Source inclusion, by name.
@@ -1134,6 +1171,10 @@ func texIncludedNames(src []byte) []texInclude {
 			// directory before it looks anywhere else. The caller resolves the
 			// extension; a name that matches nothing here is a bundle package.
 		default:
+			i += wordLen - 1
+			continue
+		}
+		if braceDepth > 0 || ifDepth > 0 {
 			i += wordLen - 1
 			continue
 		}

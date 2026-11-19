@@ -232,6 +232,24 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 			t.Fatalf("an uploaded-but-unused file refused the job over %q: TeX never reads it", got)
 		}
 	})
+
+	t.Run("an include inside an unused macro is not source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\newcommand{\\unused}{\\input{legacy}}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): the macro that inputs it is never called", got)
+		}
+	})
+
+	t.Run("an include inside a conditional is not source", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\iffoo\\input{legacy}\\fi\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "legacy.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("legacy.tex was scanned (got %q): the include sits inside a conditional", got)
+		}
+	})
 }
 
 // TestIncludedNamesAreParsedNotMatched covers both directions a regexp got
@@ -277,6 +295,24 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\lstinputlisting{sample.txt}\n\\addbibresource{refs.bib}\n",
 			want: nil,
 			why:  "neither makes its target TeX source, and treating them as if they did refused a paper for quoting a directive",
+		},
+		{
+			name: "an include inside an unused macro body",
+			src:  "\\newcommand{\\unused}{\\input{legacy}}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "TeX does not read legacy.tex unless \\unused is called, and scanning it refused a valid document",
+		},
+		{
+			name: "an include inside a conditional",
+			src:  "\\iffoo\\input{legacy}\\fi\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "a false conditional still compiles, and the include inside it is not an executed dependency",
+		},
+		{
+			name: "a newif declaration does not swallow the next include",
+			src:  "\\newif\\ifdraft\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "\\newif\\ifdraft declares a conditional; treating \\ifdraft as an open \\if skipped every later include",
 		},
 	}
 
