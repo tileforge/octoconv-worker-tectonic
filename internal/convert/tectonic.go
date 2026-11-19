@@ -1164,6 +1164,14 @@ func texIncludedNames(src []byte) []texInclude {
 			}
 		}
 		switch {
+		case word == "endinput":
+			// TeX finishes this line and then stops reading the file. An
+			// \input on the next line is not a source dependency.
+			if braceDepth == 0 && ifDepth == 0 {
+				text = text[:endinputLimit(text, i, wordLen)]
+			}
+			i += wordLen - 1
+			continue
 		case word == "fi":
 			if ifDepth > 0 {
 				ifDepth--

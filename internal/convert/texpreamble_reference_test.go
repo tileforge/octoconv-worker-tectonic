@@ -74,6 +74,14 @@ func referenceScanTeXPreamble(prefix []byte) (packages []string, complete bool) 
 			ifDepth++
 			i += wordLen - 1
 			continue
+		case word == "endinput":
+			if braceDepth == 0 && ifDepth == 0 {
+				if nl := strings.IndexByte(src[i+wordLen:], '\n'); nl >= 0 {
+					src = src[:i+wordLen+nl+1]
+				}
+			}
+			i += wordLen - 1
+			continue
 		case word == "begin":
 			next, closed := referenceSkipFilecontentsBody(src, i, wordLen)
 			if next < 0 {

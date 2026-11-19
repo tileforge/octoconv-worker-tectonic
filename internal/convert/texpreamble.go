@@ -243,6 +243,15 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 			ifDepth++
 			i += wordLen - 1
 			continue
+		case word == "endinput":
+			// TeX finishes this line and then stops reading the file. A
+			// \RequirePackage on the next line of an uploaded style is not
+			// a load. One on this same line is.
+			if braceDepth == 0 && ifDepth == 0 {
+				src = src[:endinputLimit(src, i, wordLen)]
+			}
+			i += wordLen - 1
+			continue
 		case word == "begin":
 			// filecontents writes its body to a file. A \RequirePackage in
 			// that body is text, and reporting it refuses a document that
@@ -299,6 +308,16 @@ func VisitTeXPreamblePackages(prefix []byte, visit func(pkg string) bool) (compl
 		}
 	}
 	return complete
+}
+
+// endinputLimit is the end of the line TeX still reads after \endinput.
+// The primitive finishes that line, then stops reading the file. With no
+// newline left, the rest of the buffer is that line.
+func endinputLimit(text string, i, wordLen int) int {
+	if nl := strings.IndexByte(text[i+wordLen:], '\n'); nl >= 0 {
+		return i + wordLen + nl + 1
+	}
+	return len(text)
 }
 
 // texControlWord returns the TeX control sequence at the start of src, which

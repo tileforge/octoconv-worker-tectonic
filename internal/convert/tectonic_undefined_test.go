@@ -294,6 +294,24 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("a package after endinput in an uploaded style is not a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{custom}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "custom.sty", "\\ProvidesPackage{custom}\n\\endinput\n\\RequirePackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("fontspec was reported (got %q): TeX stops reading custom.sty at \\endinput", got)
+		}
+	})
+
+	t.Run("a package on the endinput line of an uploaded style is a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{custom}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "custom.sty", "\\endinput\\RequirePackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("fontspec was not reported (got %q): TeX still reads the rest of the \\endinput line", got)
+		}
+	})
+
 	t.Run("an include written by filecontents is not source", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n"+
@@ -418,6 +436,18 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\begin{verbatim}\n\\input{legacy}\n\\end{verbatim}\n\\input{preamble}\n",
 			want: []string{"preamble"},
 			why:  "verbatim prints the example; TeX does not read legacy.tex",
+		},
+		{
+			name: "an include after endinput is not source",
+			src:  "\\input{preamble}\n\\endinput\n\\input{legacy}\n",
+			want: []string{"preamble"},
+			why:  "TeX finishes the \\endinput line and does not read legacy.tex",
+		},
+		{
+			name: "an include on the endinput line is source",
+			src:  "\\endinput\\input{legacy}\n\\input{preamble}\n",
+			want: []string{"legacy"},
+			why:  "TeX still executes tokens on the same line as \\endinput",
 		},
 		{
 			name: "an include written by filecontents is not source",

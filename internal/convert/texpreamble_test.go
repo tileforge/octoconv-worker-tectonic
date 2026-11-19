@@ -356,6 +356,64 @@ func TestScanTeXPreambleSkipsFilecontentsBodies(t *testing.T) {
 	}
 }
 
+// TestScanTeXPreambleStopsAfterEndinput checks the primitive's own rule: TeX
+// finishes the line that holds a top-level \endinput and does not read the
+// rest of the file.
+func TestScanTeXPreambleStopsAfterEndinput(t *testing.T) {
+	cases := []struct {
+		name         string
+		src          string
+		wantPackages []string
+		wantComplete bool
+	}{
+		{
+			name: "the next line of a style is not a load",
+			src:  "\\ProvidesPackage{custom}\n\\endinput\n\\RequirePackage{fontspec}\n",
+		},
+		{
+			name:         "a declaration on the same line is still a load",
+			src:          "\\endinput\\RequirePackage{amsmath}\n\\RequirePackage{fontspec}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "a package before endinput is still a load",
+			src:          "\\RequirePackage{amsmath}\n\\endinput\n\\RequirePackage{fontspec}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "begin document after endinput does not revive the trailing package",
+			src:          "\\endinput\n\\usepackage{fontspec}\n\\begin{document}\n",
+			wantComplete: true,
+		},
+		{
+			name:         "endinput inside a conditional does not hide the package after fi",
+			src:          "\\iffalse\\endinput\\fi\n\\usepackage{amsmath}\n\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+		{
+			name:         "endinput inside a macro does not hide a later package",
+			src:          "\\newcommand{\\x}{\\endinput}\n\\usepackage{amsmath}\n\\begin{document}\n",
+			wantPackages: []string{"amsmath"},
+			wantComplete: true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, complete := convert.ScanTeXPreamble([]byte(tc.src))
+			if complete != tc.wantComplete {
+				t.Errorf("complete = %v, want %v", complete, tc.wantComplete)
+			}
+			if strings.Join(got, ",") != strings.Join(tc.wantPackages, ",") {
+				t.Errorf("packages = %v, want %v", got, tc.wantPackages)
+			}
+			if denied := convert.TeXDeniedInSource([]byte(tc.src)); denied != "" {
+				t.Errorf("TeXDeniedInSource = %q, want empty", denied)
+			}
+		})
+	}
+}
+
 // TestTeXUnsupportedPackageErrorRoundTrips holds the sentinel and its name
 // extraction together. Both gates format their client-facing message from
 // TeXUnsupportedPackageName, so a change that broke extraction would produce
