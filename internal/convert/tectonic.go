@@ -1378,9 +1378,9 @@ func skipVerbBody(text string, i, wordLen int) int {
 	return j
 }
 
-// skipVerbatimEnv jumps past \begin{verbatim} or \begin{verbatim*}. Commands
-// inside the environment are example text. Brace depth does not hide them,
-// because they sit at depth zero.
+// skipVerbatimEnv jumps past a body that LaTeX prints rather than executes:
+// verbatim, verbatim*, and lstlisting. Commands inside are example text.
+// Brace depth does not hide them, because they sit at depth zero.
 func skipVerbatimEnv(text string, i, wordLen int) (int, bool) {
 	rest := text[i+wordLen:]
 	k := 0
@@ -1395,7 +1395,7 @@ func skipVerbatimEnv(text string, i, wordLen int) (int, bool) {
 		return 0, false
 	}
 	name := rest[k+1 : k+end]
-	if name != "verbatim" && name != "verbatim*" {
+	if name != "verbatim" && name != "verbatim*" && name != "lstlisting" {
 		return 0, false
 	}
 	start := i + wordLen + k + end + 1

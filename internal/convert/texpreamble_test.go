@@ -383,6 +383,16 @@ func TestScanTeXPreambleSkipsVerbatim(t *testing.T) {
 			src:          "\\verb|\\usepackage{fontspec}|\n\\usepackage{amsmath}\n",
 			wantPackages: []string{"amsmath"},
 		},
+		{
+			name:         "lstlisting example is not a load",
+			src:          "\\begin{lstlisting}\n\\usepackage{fontspec}\n\\end{lstlisting}\n\\usepackage{amsmath}\n",
+			wantPackages: []string{"amsmath"},
+		},
+		{
+			name:         "lstlisting options do not hide a later package",
+			src:          "\\begin{lstlisting}[language=TeX]\n\\usepackage{fontspec}\n\\end{lstlisting}\n\\usepackage{booktabs}\n",
+			wantPackages: []string{"booktabs"},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

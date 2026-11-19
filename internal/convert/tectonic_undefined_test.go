@@ -348,6 +348,15 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		}
 	})
 
+	t.Run("a lstlisting example in an included chapter is not a load", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\usepackage{listings}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
+		write(t, dir, "chapter.tex", "\\begin{lstlisting}\n\\usepackage{fontspec}\n\\end{lstlisting}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("fontspec was reported (got %q): the example is inside lstlisting", got)
+		}
+	})
+
 	t.Run("a verbatim example in an included chapter is not a load", func(t *testing.T) {
 		dir := t.TempDir()
 		write(t, dir, "in.latex", "\\documentclass{article}\n\\begin{document}\n\\input{chapter}\n\\end{document}\n")
@@ -522,6 +531,12 @@ func TestIncludedNamesAreParsedNotMatched(t *testing.T) {
 			src:  "\\usepackage[draft]{alpha,beta}\n",
 			want: []string{"alpha", "beta"},
 			why:  "\\usepackage{a,b} loads both, and the option group is not one of the names",
+		},
+		{
+			name: "an include shown in lstlisting is not source",
+			src:  "\\begin{lstlisting}\n\\input{legacy}\n\\end{lstlisting}\n\\input{preamble}\n",
+			want: []string{"preamble"},
+			why:  "lstlisting prints the example; TeX does not read legacy.tex",
 		},
 		{
 			name: "an include shown in verbatim is not source",
