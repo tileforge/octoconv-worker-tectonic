@@ -1,0 +1,366 @@
+\documentclass{article}
+\begin{filecontents*}[overwrite]{corpusrefs.bib}
+@book{k1,
+  author = {Knuth, Donald E.},
+  title = {Volume 1},
+  publisher = {Addison-Wesley},
+  year = {1981}
+}
+@article{l1,
+  author = {Lamport, Leslie},
+  title = {Paper 1},
+  journal = {TUGboat},
+  year = {1991}
+}
+@book{k2,
+  author = {Knuth, Donald E.},
+  title = {Volume 2},
+  publisher = {Addison-Wesley},
+  year = {1982}
+}
+@article{l2,
+  author = {Lamport, Leslie},
+  title = {Paper 2},
+  journal = {TUGboat},
+  year = {1992}
+}
+@book{k3,
+  author = {Knuth, Donald E.},
+  title = {Volume 3},
+  publisher = {Addison-Wesley},
+  year = {1983}
+}
+@article{l3,
+  author = {Lamport, Leslie},
+  title = {Paper 3},
+  journal = {TUGboat},
+  year = {1993}
+}
+@book{k4,
+  author = {Knuth, Donald E.},
+  title = {Volume 4},
+  publisher = {Addison-Wesley},
+  year = {1984}
+}
+@article{l4,
+  author = {Lamport, Leslie},
+  title = {Paper 4},
+  journal = {TUGboat},
+  year = {1994}
+}
+@book{k5,
+  author = {Knuth, Donald E.},
+  title = {Volume 5},
+  publisher = {Addison-Wesley},
+  year = {1985}
+}
+@article{l5,
+  author = {Lamport, Leslie},
+  title = {Paper 5},
+  journal = {TUGboat},
+  year = {1995}
+}
+\end{filecontents*}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{corpusrefs.bib}
+\begin{document}
+\tableofcontents
+\section{Section 1}
+\label{sec:1}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:1}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:2}; discussed by \textcite{k2} and \textcite{l4}.
+\section{Section 2}
+\label{sec:2}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:2}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:3}; discussed by \textcite{k3} and \textcite{l5}.
+\section{Section 3}
+\label{sec:3}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:3}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:4}; discussed by \textcite{k4} and \textcite{l1}.
+\section{Section 4}
+\label{sec:4}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:4}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:5}; discussed by \textcite{k5} and \textcite{l2}.
+\section{Section 5}
+\label{sec:5}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:5}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:6}; discussed by \textcite{k1} and \textcite{l3}.
+\section{Section 6}
+\label{sec:6}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:6}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:7}; discussed by \textcite{k2} and \textcite{l4}.
+\section{Section 7}
+\label{sec:7}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:7}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:8}; discussed by \textcite{k3} and \textcite{l5}.
+\section{Section 8}
+\label{sec:8}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:8}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:9}; discussed by \textcite{k4} and \textcite{l1}.
+\section{Section 9}
+\label{sec:9}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:9}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:10}; discussed by \textcite{k5} and \textcite{l2}.
+\section{Section 10}
+\label{sec:10}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:10}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:11}; discussed by \textcite{k1} and \textcite{l3}.
+\section{Section 11}
+\label{sec:11}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:11}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:12}; discussed by \textcite{k2} and \textcite{l4}.
+\section{Section 12}
+\label{sec:12}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:12}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:13}; discussed by \textcite{k3} and \textcite{l5}.
+\section{Section 13}
+\label{sec:13}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:13}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:14}; discussed by \textcite{k4} and \textcite{l1}.
+\section{Section 14}
+\label{sec:14}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:14}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:15}; discussed by \textcite{k5} and \textcite{l2}.
+\section{Section 15}
+\label{sec:15}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:15}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:16}; discussed by \textcite{k1} and \textcite{l3}.
+\section{Section 16}
+\label{sec:16}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:16}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:17}; discussed by \textcite{k2} and \textcite{l4}.
+\section{Section 17}
+\label{sec:17}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:17}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:18}; discussed by \textcite{k3} and \textcite{l5}.
+\section{Section 18}
+\label{sec:18}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:18}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Engine & Passes & Cost \\
+\midrule
+tectonic & many & measured \\
+others & one & irrelevant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+See Section~\ref{sec:19}; discussed by \textcite{k4} and \textcite{l1}.
+\section{Section 19}
+\label{sec:19}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:19}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:20}; discussed by \textcite{k5} and \textcite{l2}.
+\section{Section 20}
+\label{sec:20}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:20}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:20}; discussed by \textcite{k1} and \textcite{l3}.
+\printbibliography
+\end{document}

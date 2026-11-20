@@ -1,0 +1,96 @@
+\documentclass{article}
+\begin{filecontents*}[overwrite]{corpusrefs.bib}
+@book{k1,
+  author = {Knuth, Donald E.},
+  title = {Volume 1},
+  publisher = {Addison-Wesley},
+  year = {1981}
+}
+@article{l1,
+  author = {Lamport, Leslie},
+  title = {Paper 1},
+  journal = {TUGboat},
+  year = {1991}
+}
+@book{k2,
+  author = {Knuth, Donald E.},
+  title = {Volume 2},
+  publisher = {Addison-Wesley},
+  year = {1982}
+}
+@article{l2,
+  author = {Lamport, Leslie},
+  title = {Paper 2},
+  journal = {TUGboat},
+  year = {1992}
+}
+@book{k3,
+  author = {Knuth, Donald E.},
+  title = {Volume 3},
+  publisher = {Addison-Wesley},
+  year = {1983}
+}
+@article{l3,
+  author = {Lamport, Leslie},
+  title = {Paper 3},
+  journal = {TUGboat},
+  year = {1993}
+}
+@book{k4,
+  author = {Knuth, Donald E.},
+  title = {Volume 4},
+  publisher = {Addison-Wesley},
+  year = {1984}
+}
+@article{l4,
+  author = {Lamport, Leslie},
+  title = {Paper 4},
+  journal = {TUGboat},
+  year = {1994}
+}
+@book{k5,
+  author = {Knuth, Donald E.},
+  title = {Volume 5},
+  publisher = {Addison-Wesley},
+  year = {1985}
+}
+@article{l5,
+  author = {Lamport, Leslie},
+  title = {Paper 5},
+  journal = {TUGboat},
+  year = {1995}
+}
+\end{filecontents*}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{corpusrefs.bib}
+\begin{document}
+\tableofcontents
+\section{Section 1}
+\label{sec:1}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:1}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:2}; discussed by \textcite{k2} and \textcite{l4}.
+\section{Section 2}
+\label{sec:2}
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+
+\begin{equation}\label{eq:2}
+\int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}, \qquad
+\sum_{n=1}^{\infty} \frac{1}{n^{2}} = \frac{\pi^{2}}{6}.
+\end{equation}
+
+The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. The quick brown fox jumps over the lazy dog, and the typesetter must break this paragraph into lines that fit the measure without leaving a river of white space down the page. Kerning, hyphenation and the badness function all contribute to the cost of a single pass. 
+See Section~\ref{sec:2}; discussed by \textcite{k3} and \textcite{l5}.
+\printbibliography
+\end{document}

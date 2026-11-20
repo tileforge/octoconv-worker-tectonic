@@ -1,0 +1,16 @@
+% A hostile document: it asks TeX to run a shell command.
+%
+% \write18 is TeX's shell-escape primitive. Under a permissive configuration
+% tectonic runs it -- verified, see PROVENANCE.md -- so this fixture is not a
+% document that merely looks dangerous; it is one that has been observed
+% executing.
+%
+% The sentinel path is absolute on purpose. A relative one appeared to prove the
+% command had not run when in fact it had: tectonic executes shell commands in
+% its own working directory, not the caller's, so the file was created
+% somewhere the test never looked.
+\documentclass{article}
+\begin{document}
+\immediate\write18{touch OCTOCONV_SENTINEL_PATH}
+Hostile.
+\end{document}
