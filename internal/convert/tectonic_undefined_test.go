@@ -173,6 +173,32 @@ func TestValidateTectonicBundleRefusesWhatStatAccepts(t *testing.T) {
 // two, and it is the one this project has paid for most.
 //
 // So the walk follows what TeX follows.
+func TestJobLocalSourceName(t *testing.T) {
+	cases := []struct {
+		name string
+		ok   bool
+		want string
+	}{
+		{name: "preamble", ok: true, want: "preamble"},
+		{name: "./preamble", ok: true, want: "preamble"},
+		{name: "././preamble", ok: true, want: "preamble"},
+		{name: "foo/../preamble", ok: true, want: "preamble"},
+		{name: "./preamble.tex", ok: true, want: "preamble.tex"},
+		{name: "../preamble", ok: false},
+		{name: "./../preamble", ok: false},
+		{name: "/etc/passwd", ok: false},
+		{name: `..\preamble`, ok: false},
+		{name: ".", ok: false},
+		{name: "", ok: false},
+	}
+	for _, tc := range cases {
+		got, ok := jobLocalSourceName(tc.name)
+		if ok != tc.ok || (ok && got != tc.want) {
+			t.Errorf("jobLocalSourceName(%q) = %q, %v; want %q, %v", tc.name, got, ok, tc.want, tc.ok)
+		}
+	}
+}
+
 func TestIncludeCandidatesAreTexOnly(t *testing.T) {
 	got := texInclude{name: "chapter", kind: "include"}.candidates()
 	if len(got) != 1 || got[0] != "chapter.tex" {
@@ -325,6 +351,28 @@ func TestDeniedPackagesFollowWhatTheDocumentIncludes(t *testing.T) {
 		write(t, dir, "custom.sty", "\\endinput\\RequirePackage{fontspec}\n")
 		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
 			t.Fatalf("fontspec was not reported (got %q): TeX still reads the rest of the \\endinput line", got)
+		}
+	})
+
+	t.Run("a dot slash input is the same job local file", func(t *testing.T) {
+		dir := t.TempDir()
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\input{./preamble}\n\\begin{document}x\\end{document}\n")
+		write(t, dir, "preamble.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "fontspec" {
+			t.Fatalf("preamble.tex was not scanned (got %q): \\input{./preamble} reads it", got)
+		}
+	})
+
+	t.Run("a path that leaves the job directory is not source", func(t *testing.T) {
+		parent := t.TempDir()
+		dir := filepath.Join(parent, "job")
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		write(t, dir, "in.latex", "\\documentclass{article}\n\\input{../outside}\n\\begin{document}x\\end{document}\n")
+		write(t, parent, "outside.tex", "\\usepackage{fontspec}\n")
+		if got := scan(filepath.Join(dir, "in.latex")); got != "" {
+			t.Fatalf("outside.tex was scanned (got %q): the reference leaves the job directory", got)
 		}
 	})
 

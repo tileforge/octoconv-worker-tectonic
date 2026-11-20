@@ -37,6 +37,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -1015,14 +1016,15 @@ func texSourceClosure(inPath string) []string {
 			continue
 		}
 		for _, inc := range texIncludedNames(src) {
-			name := inc.name
-			// The name is resolved inside the job's directory only. A name
-			// with a path in it is not followed: the API refuses such
-			// FILENAMES, and following one here would be this walk inventing a
-			// path the uploader could not have created.
-			if name == "" || strings.ContainsAny(name, `/\`) {
+			// TeX reads \input{./preamble} as preamble in this directory.
+			// The upload rule forbids a slash in a filename, not in the
+			// document's own reference to a file that is already here.
+			// A name that leaves the directory is not one of those files.
+			local, ok := jobLocalSourceName(inc.name)
+			if !ok {
 				continue
 			}
+			inc.name = local
 			// THE EXTENSIONS THAT DIRECTIVE WOULD TRY, not every extension.
 			//
 			// \usepackage{listings} loads listings.sty and never listings.tex,
@@ -1032,7 +1034,10 @@ func texSourceClosure(inPath string) []string {
 			// quoting. Measured; it is the same over-refusal this walk has now
 			// produced three times, each time while closing a bypass.
 			for _, cand := range inc.candidates() {
-				p := filepath.Join(dir, cand)
+				p := filepath.Join(dir, filepath.FromSlash(cand))
+				if !pathStaysIn(dir, p) {
+					continue
+				}
 				// TeX opens the first file in this order and stops. A later
 				// candidate that also exists, such as chapter.tex.tex beside
 				// chapter.tex, is not read. An earlier file already in the
@@ -1059,6 +1064,30 @@ func texSourceClosure(inPath string) []string {
 // direction that fails closed for the WORKER's other checks and open for this
 // one. It is set above the API's own cap so a legitimate job never reaches it.
 const maxClosureFiles = 64
+
+// jobLocalSourceName cleans a TeX file reference to a path that stays in
+// the job directory. \input{./preamble} is preamble. A reference that
+// climbs out, or a backslash, is not a file this job can hold.
+func jobLocalSourceName(name string) (string, bool) {
+	if name == "" || strings.Contains(name, `\`) {
+		return "", false
+	}
+	cleaned := path.Clean(name)
+	if cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, "../") || path.IsAbs(cleaned) {
+		return "", false
+	}
+	return cleaned, true
+}
+
+// pathStaysIn reports whether p is dir or a file inside it. Join can still
+// walk out when a candidate contains "..".
+func pathStaysIn(dir, p string) bool {
+	rel, err := filepath.Rel(dir, p)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return false
+	}
+	return true
+}
 
 // texIncludedNames returns the names a TeX source pulls in AS SOURCE.
 //
