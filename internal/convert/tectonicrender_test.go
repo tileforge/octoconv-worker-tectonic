@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestTectonicRenderManifest(t *testing.T) {
@@ -733,6 +735,35 @@ func TestTectonicRenderSandbox(t *testing.T) {
 	}
 	if name != "pdftoppm" || strings.Join(args, "\x00") != strings.Join(ppm, "\x00") {
 		t.Fatalf("direct %s %v", name, args)
+	}
+}
+
+func TestTectonicRenderRasterDeadline(t *testing.T) {
+	c := TectonicRenderConverter{TectonicConverter: TectonicConverter{CPUSeconds: 271}}
+	raw := fmt.Errorf("pdftoppm killed: %w", context.DeadlineExceeded)
+	busy := engineCPU{User: time.Second, Elapsed: time.Second, Known: true}
+	err := c.classifyRaster(context.Background(), raw, busy)
+	if !errors.Is(err, ErrTeXEngineTimeout) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, ErrTeXEngineStarved) {
+		t.Fatal(err)
+	}
+	idle := engineCPU{User: 10 * time.Millisecond, Elapsed: time.Second, Known: true}
+	err = c.classifyRaster(context.Background(), raw, idle)
+	if !errors.Is(err, ErrTeXEngineStarved) || errors.Is(err, ErrTeXEngineTimeout) || errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal(err)
+	}
+	unknown := engineCPU{}
+	err = c.classifyRaster(context.Background(), raw, unknown)
+	if !errors.Is(err, ErrTeXEngineTimeout) || errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal(err)
+	}
+	half := engineCPU{User: 500 * time.Millisecond, Elapsed: time.Second, Known: true}
+	err = c.classifyRaster(context.Background(), raw, half)
+	if !errors.Is(err, ErrTeXEngineTimeout) || errors.Is(err, ErrTeXEngineStarved) {
+		t.Fatal(err)
+	}
+	plain := errors.New("pdftoppm failed")
+	if got := c.classifyRaster(context.Background(), plain, busy); got != plain {
+		t.Fatal(got)
 	}
 }
 

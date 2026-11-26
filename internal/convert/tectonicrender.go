@@ -2,6 +2,7 @@ package convert
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/tileforge/octoconv-worker-tectonic/internal/sandbox"
 )
@@ -151,7 +153,30 @@ func (c TectonicRenderConverter) raster(ctx context.Context, jobDir, pdfPath, pr
 	if err != nil {
 		return err
 	}
-	_, err = runCommandLimitedEnv(ctx, tectonicLogLimit, tectonicEnv(jobDir), name, args...)
+	_, cpu, err := runCommandLimitedEnvCPU(ctx, tectonicLogLimit, tectonicEnv(jobDir), name, args...)
+	if err != nil {
+		return c.classifyRaster(ctx, err, cpu)
+	}
+	return nil
+}
+
+func (c TectonicRenderConverter) classifyRaster(ctx context.Context, err error, cpu engineCPU) error {
+	if c.CPUSeconds > 0 && ctx.Err() == nil {
+		var xerr *exec.ExitError
+		if errors.As(err, &xerr) && cpu.Known {
+			if st, ok := xerr.Sys().(syscall.WaitStatus); ok && st.Signaled() &&
+				cpuExhausted(st.Signal(), cpu.Total(), c.CPUSeconds) {
+				return fmt.Errorf("pdftoppm: %w after %.0fs of CPU", ErrTeXCPUExhausted, cpu.Total().Seconds())
+			}
+		}
+	}
+	if errors.Is(err, context.DeadlineExceeded) && classifyDeadline(cpu) {
+		return fmt.Errorf("pdftoppm: %w: the deadline expired after %.1fs of CPU in %.1fs of wall clock (%.2f of one CPU)",
+			ErrTeXEngineStarved, cpu.Total().Seconds(), cpu.Elapsed.Seconds(), cpu.Share())
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return fmt.Errorf("pdftoppm: %w: %v", ErrTeXEngineTimeout, err)
+	}
 	return err
 }
 

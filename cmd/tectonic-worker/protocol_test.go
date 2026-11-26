@@ -246,6 +246,13 @@ func TestTectonicEngineCode(t *testing.T) {
 	if code, _ := tectonicEngineCode(os.ErrNotExist); code != "engine_error" {
 		t.Fatal("engine")
 	}
+	rasterTimeout := fmt.Errorf("pdftoppm: %w: %v", convert.ErrTeXEngineTimeout, fmt.Errorf("pdftoppm killed: %w", context.DeadlineExceeded))
+	if code, _ := tectonicEngineCode(rasterTimeout); code != "engine_error" {
+		t.Fatalf("raster timeout %s", code)
+	}
+	if code, _ := tectonicEngineCode(fmt.Errorf("pdftoppm: %w", convert.ErrTeXEngineStarved)); code != "timeout" {
+		t.Fatal("raster starvation")
+	}
 	if transportCode(context.DeadlineExceeded) != "timeout" || transportCode(os.ErrNotExist) != "engine_error" {
 		t.Fatal("transport")
 	}
