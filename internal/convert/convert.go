@@ -13,6 +13,7 @@ var ErrOutputTooLarge = ErrTeXOutputTooLarge
 const (
 	EngineTectonic             = "tectonic"
 	OperationConvert           = "convert"
+	OperationRender            = "render"
 	DefaultEngineTimeout       = 271 * time.Second
 	MaxInputBytes        int64 = 2 << 20
 	MaxFileBytes               = DefaultTectonicMaxOutputBytes
@@ -45,6 +46,8 @@ func MIMEType(format string) string {
 	switch NormalizeFormat(format) {
 	case "pdf":
 		return "application/pdf"
+	case "png":
+		return "image/png"
 	case "latex":
 		return "application/x-latex"
 	default:

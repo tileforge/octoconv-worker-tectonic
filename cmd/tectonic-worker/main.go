@@ -78,6 +78,7 @@ func main() {
 		log.Printf("tectonic sandbox proven: tectonic ran inside the job directory and was denied a file outside every grant (output %d bytes, no outside output)", proofBytes)
 	}
 	convert.Default.Replace(tectonicConverter)
+	convert.Default.Replace(convert.TectonicRenderConverter{TectonicConverter: tectonicConverter})
 
 	dial, err := loadProtocolDial()
 	if err != nil {

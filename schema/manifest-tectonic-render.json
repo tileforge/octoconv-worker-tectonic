@@ -1,0 +1,16 @@
+{
+  "capabilities": [
+    {
+      "id": "octoconv.render.tectonic",
+      "version": 1,
+      "legacy": {"operation": "render", "engine": "tectonic"},
+      "client_operation": "render",
+      "inputs": [{"role": "source", "min": 1, "max": 32}],
+      "outputs": [{"role": "primary", "min": 1, "max": 1}],
+      "parameter_schema": {},
+      "formats": [
+        {"from": "latex", "to": "png"}
+      ]
+    }
+  ]
+}
