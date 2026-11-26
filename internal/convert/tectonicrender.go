@@ -80,16 +80,7 @@ func (c TectonicRenderConverter) render(ctx context.Context, inPath, outPath str
 	jobDir := filepath.Dir(outPath)
 	var pdfPath, prefix string
 	defer func() {
-		if pdfPath != "" {
-			_ = os.Remove(pdfPath)
-		}
-		if prefix != "" {
-			matches, _ := filepath.Glob(prefix + "-*.png")
-			for _, match := range matches {
-				_ = os.Remove(match)
-			}
-			_ = os.Remove(prefix)
-		}
+		tectonicRenderCleanup(pdfPath, prefix)
 	}()
 
 	pdfPath, err = tectonicRenderTemp(jobDir, ".tectonic-render-*.pdf", inPath, outPath)
@@ -174,10 +165,32 @@ func (c TectonicRenderConverter) classifyRaster(ctx context.Context, err error, 
 		return fmt.Errorf("pdftoppm: %w: the deadline expired after %.1fs of CPU in %.1fs of wall clock (%.2f of one CPU)",
 			ErrTeXEngineStarved, cpu.Total().Seconds(), cpu.Elapsed.Seconds(), cpu.Share())
 	}
+	var setupErr *exec.ExitError
+	if len(c.SandboxHelper) > 0 && errors.As(err, &setupErr) && setupErr.ExitCode() == TectonicSandboxSetupExit {
+		return fmt.Errorf("pdftoppm: %w: %s", ErrTeXSandboxUnavailable, tectonicTail([]byte(err.Error())))
+	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		return fmt.Errorf("pdftoppm: %w: %v", ErrTeXEngineTimeout, err)
 	}
 	return err
+}
+
+func tectonicRenderCleanup(pdfPath, prefix string) {
+	if pdfPath != "" {
+		_ = os.Remove(pdfPath)
+	}
+	if prefix == "" {
+		return
+	}
+	dir, base := filepath.Dir(prefix), filepath.Base(prefix)
+	entries, _ := os.ReadDir(dir)
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasPrefix(name, base+"-") && strings.HasSuffix(name, ".png") {
+			_ = os.Remove(filepath.Join(dir, name))
+		}
+	}
+	_ = os.Remove(prefix)
 }
 
 func (c TectonicRenderConverter) rasterCommand(jobDir string, ppm []string) (string, []string, error) {

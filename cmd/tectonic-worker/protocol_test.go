@@ -253,6 +253,9 @@ func TestTectonicEngineCode(t *testing.T) {
 	if code, _ := tectonicEngineCode(fmt.Errorf("pdftoppm: %w", convert.ErrTeXEngineStarved)); code != "timeout" {
 		t.Fatal("raster starvation")
 	}
+	if code, _ := tectonicEngineCode(fmt.Errorf("pdftoppm: %w: helper", convert.ErrTeXSandboxUnavailable)); code != "timeout" {
+		t.Fatal("raster sandbox")
+	}
 	if transportCode(context.DeadlineExceeded) != "timeout" || transportCode(os.ErrNotExist) != "engine_error" {
 		t.Fatal("transport")
 	}

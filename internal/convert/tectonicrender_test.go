@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -735,6 +736,92 @@ func TestTectonicRenderSandbox(t *testing.T) {
 	}
 	if name != "pdftoppm" || strings.Join(args, "\x00") != strings.Join(ppm, "\x00") {
 		t.Fatalf("direct %s %v", name, args)
+	}
+}
+
+func TestTectonicRenderSandboxSetup(t *testing.T) {
+	plain := exec.Command("sh", "-c", "exit 78")
+	runErr := plain.Run()
+	if runErr == nil {
+		t.Fatal("exit 78")
+	}
+	bare := TectonicRenderConverter{}
+	if got := bare.classifyRaster(context.Background(), runErr, engineCPU{}); errors.Is(got, ErrTeXSandboxUnavailable) || got != runErr {
+		t.Fatal(got)
+	}
+	helped := TectonicRenderConverter{TectonicConverter: TectonicConverter{SandboxHelper: []string{"helper"}}}
+	got := helped.classifyRaster(context.Background(), runErr, engineCPU{})
+	if !errors.Is(got, ErrTeXSandboxUnavailable) || errors.Is(got, runErr) {
+		t.Fatal(got)
+	}
+
+	if _, err := exec.LookPath("pdftoppm"); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	helper := filepath.Join(dir, "helper")
+	script := "#!/bin/sh\necho 'ruleset creation failed' >&2\nexit " + strconv.Itoa(TectonicSandboxSetupExit) + "\n"
+	if err := os.WriteFile(helper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	in := filepath.Join(dir, "in.latex")
+	out := filepath.Join(dir, "out.png")
+	if err := os.WriteFile(in, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	precreate(t, out)
+	c := TectonicRenderConverter{TectonicConverter: TectonicConverter{SandboxHelper: []string{helper}}}
+	c.compile = func(_ context.Context, _, pdfPath string) error {
+		return os.WriteFile(pdfPath, tinyPDF, 0o600)
+	}
+	err := c.Convert(context.Background(), in, out, map[string]any{"size": 256})
+	if !errors.Is(err, ErrTeXSandboxUnavailable) || !strings.Contains(err.Error(), "ruleset creation failed") {
+		t.Fatal(err)
+	}
+	absentOutput(t, out)
+}
+
+func TestTectonicRenderCleanupIsLiteral(t *testing.T) {
+	base := t.TempDir()
+	dir := filepath.Join(base, "report[1]")
+	sibling := filepath.Join(base, "report1")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(sibling, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	in := filepath.Join(dir, "in.latex")
+	out := filepath.Join(dir, "out.png")
+	if err := os.WriteFile(in, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var decoy string
+	c, _ := scriptedRender("/bundle", func(_ context.Context, name string, args []string) error {
+		if name != "pdftoppm" {
+			return nil
+		}
+		prefix := args[len(args)-1]
+		decoy = filepath.Join(sibling, filepath.Base(prefix)+"-1.png")
+		if err := os.WriteFile(decoy, []byte("decoy"), 0o600); err != nil {
+			return err
+		}
+		return inkPage(1, 256, 128, 1, 1)(prefix)
+	})
+	if err := c.Convert(context.Background(), in, out, map[string]any{"size": 256}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(decoy); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".png") && entry.Name() != "out.png" {
+			t.Fatalf("left %s", entry.Name())
+		}
 	}
 }
 
